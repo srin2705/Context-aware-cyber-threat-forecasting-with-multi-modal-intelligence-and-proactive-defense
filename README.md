@@ -2,11 +2,7 @@
 
 > **Predict the next attack before it happens** — a production-ready ML pipeline that classifies live IoT network traffic *and* forecasts future threat states using a hybrid XGBoost → LSTM → Adaptive Markov v3 architecture with uncertainty quantification and context-aware risk scoring.
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python)](https://python.org)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange?logo=tensorflow)](https://tensorflow.org)
-[![XGBoost](https://img.shields.io/badge/XGBoost-1.7+-green)](https://xgboost.readthedocs.io)
-[![Dataset](https://img.shields.io/badge/Dataset-Bot--IoT-purple)](https://research.unsw.edu.au/projects/bot-iot-dataset)
-[![VIT](https://img.shields.io/badge/VIT-Vellore-red)](https://vit.ac.in)
+[![Dataset](https://img.shields.io/badge/Dataset-Bot--IoT-purple)]([https://research.unsw.edu.au/projects/bot-iot-dataset](https://www.kaggle.com/datasets/vigneshvenkateswaran/bot-iot-5-data))
 
 ---
 
@@ -348,7 +344,7 @@ Bachelor of Computer Applications (SPEALIZATION IN AI & ML)
 
 
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/Sriram2718)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/srirams2705)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-black?logo=github)](https://github.com/srin2705)
 
 ---
