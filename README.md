@@ -182,9 +182,8 @@ joblib>=1.2
 
 ## 👤 Author
 
-**[Your Name]**  
-Final Year Project — B.Tech / BSc [Your Degree]  
-[Your University], [Year]
+Sriram S 
+BCA Spealization in AI & ML
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://linkedin.com/in/YOUR_PROFILE)
 [![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/YOUR_USERNAME)
