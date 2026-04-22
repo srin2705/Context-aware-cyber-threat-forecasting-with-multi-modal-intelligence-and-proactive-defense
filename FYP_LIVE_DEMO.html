@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberThreat Forecasting — FYP Live Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
+
+  :root {
+    --bg:       #030810;
+    --panel:    #060f1e;
+    --border:   #0a2040;
+    --accent:   #00d4ff;
+    --green:    #00ff88;
+    --orange:   #ff8c00;
+    --red:      #ff2244;
+    --yellow:   #ffd700;
+    --dim:      #1a3a5c;
+    --text:     #a8c8e8;
+    --bright:   #e0f4ff;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline effect */
+  body::before {
+    content:'';
+    position:fixed; inset:0; pointer-events:none; z-index:9999;
+    background: repeating-linear-gradient(0deg,
+      transparent,transparent 2px,
+      rgba(0,212,255,0.015) 2px, rgba(0,212,255,0.015) 4px);
+  }
+
+  /* Grid background */
+  body::after {
+    content:'';
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position:relative; z-index:10;
+    border-bottom: 1px solid var(--border);
+    padding: 18px 30px;
+    display:flex; align-items:center; justify-content:space-between;
+    background: linear-gradient(90deg, rgba(0,212,255,0.07) 0%, transparent 60%);
+  }
+  .logo {
+    font-family:'Orbitron',sans-serif;
+    font-size:1.05rem; font-weight:900; letter-spacing:3px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,212,255,0.6);
+  }
+  .logo span { color: var(--green); }
+  .status-bar {
+    display:flex; gap:24px; font-size:0.72rem; color: var(--text);
+  }
+  .status-bar .dot {
+    display:inline-block; width:7px; height:7px;
+    border-radius:50%; margin-right:5px;
+    animation: pulse 2s infinite;
+  }
+  .dot.green  { background:var(--green);  box-shadow:0 0 8px var(--green); }
+  .dot.orange { background:var(--orange); box-shadow:0 0 8px var(--orange); }
+  .dot.red    { background:var(--red);    box-shadow:0 0 8px var(--red); animation-duration:0.6s; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── LAYOUT ── */
+  .app {
+    position:relative; z-index:10;
+    display:grid;
+    grid-template-columns: 300px 1fr 280px;
+    grid-template-rows: auto 1fr auto;
+    gap:0;
+    height: calc(100vh - 61px);
+  }
+
+  /* ── SCENARIO PANEL (left) ── */
+  .scenarios {
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    overflow-y:auto;
+    background: rgba(6,15,30,0.8);
+  }
+  .panel-title {
+    font-family:'Orbitron',sans-serif;
+    font-size:0.65rem; letter-spacing:3px; color:var(--accent);
+    margin-bottom:16px; text-transform:uppercase;
+  }
+  .scenario-btn {
+    width:100%; text-align:left; background:none;
+    border: 1px solid var(--border);
+    color: var(--text); font-family:'Share Tech Mono',monospace;
+    font-size:0.75rem; padding:10px 12px; margin-bottom:8px;
+    cursor:pointer; border-radius:3px;
+    transition: all 0.2s;
+    position:relative; overflow:hidden;
+  }
+  .scenario-btn:hover, .scenario-btn.active {
+    border-color: var(--accent);
+    color: var(--bright);
+    background: rgba(0,212,255,0.06);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .scenario-btn .s-name {
+    font-family:'Orbitron',sans-serif;
+    font-size:0.6rem; font-weight:700; color:var(--accent);
+    letter-spacing:2px; display:block; margin-bottom:4px;
+  }
+  .scenario-btn .s-desc { font-size:0.68rem; line-height:1.4; opacity:0.7; }
+  .scenario-btn .s-tags { margin-top:6px; display:flex; gap:5px; flex-wrap:wrap; }
+  .tag {
+    font-size:0.55rem; padding:2px 6px; border-radius:2px;
+    letter-spacing:1px; font-weight:600;
+  }
+  .tag-cn  { background:rgba(255,34,68,0.2);  color:var(--red);    border:1px solid rgba(255,34,68,0.3); }
+  .tag-ru  { background:rgba(255,34,68,0.2);  color:var(--red);    border:1px solid rgba(255,34,68,0.3); }
+  .tag-kp  { background:rgba(255,34,68,0.3);  color:var(--red);    border:1px solid rgba(255,34,68,0.4); }
+  .tag-ua  { background:rgba(255,140,0,0.2);  color:var(--orange); border:1px solid rgba(255,140,0,0.3); }
+  .tag-us  { background:rgba(0,255,136,0.1);  color:var(--green);  border:1px solid rgba(0,255,136,0.2); }
+  .tag-night  { background:rgba(138,43,226,0.2); color:#cc88ff;    border:1px solid rgba(138,43,226,0.3); }
+  .tag-apt    { background:rgba(255,215,0,0.15); color:var(--yellow); border:1px solid rgba(255,215,0,0.3); }
+  .tag-normal { background:rgba(0,255,136,0.1);  color:var(--green); border:1px solid rgba(0,255,136,0.2); }
+
+  /* ── MAIN FEED (center) ── */
+  .main-feed {
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  /* Sequence visualizer */
+  .seq-bar {
+    padding:16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(6,15,30,0.6);
+  }
+  .seq-label {
+    font-size:0.62rem; letter-spacing:2px; color:var(--dim); margin-bottom:8px;
+  }
+  .seq-steps {
+    display:flex; gap:6px; flex-wrap:wrap;
+  }
+  .seq-step {
+    font-size:0.62rem; padding:4px 8px; border-radius:2px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+    transition: all 0.3s;
+    color: var(--dim);
+  }
+  .seq-step.past  { opacity:0.4; }
+  .seq-step.current {
+    border-color: var(--accent);
+    color: var(--bright);
+    background: rgba(0,212,255,0.12);
+    box-shadow: 0 0 12px rgba(0,212,255,0.3);
+    transform: scale(1.05);
+  }
+  .seq-step.future { color: var(--text); }
+  .seq-step.cls-ddos  { border-color:var(--red);    color:var(--red); }
+  .seq-step.cls-dos   { border-color:var(--orange); color:var(--orange); }
+  .seq-step.cls-recon { border-color: #3a9fff;      color: #3a9fff; }
+  .seq-step.cls-normal{ border-color:var(--green);  color:var(--green); }
+
+  /* Timeline feed */
+  .feed {
+    flex:1; overflow-y:auto; padding:0;
+  }
+  .feed::-webkit-scrollbar { width:4px; }
+  .feed::-webkit-scrollbar-track { background:transparent; }
+  .feed::-webkit-scrollbar-thumb { background:var(--dim); border-radius:2px; }
+
+  .step-row {
+    border-bottom:1px solid rgba(10,32,64,0.8);
+    padding:12px 20px;
+    display:grid;
+    grid-template-columns: 42px 130px 30px 130px 90px 90px 80px 1fr;
+    align-items:center;
+    gap:8px;
+    font-size:0.75rem;
+    opacity:0;
+    transform: translateX(-20px);
+    transition: all 0.4s ease;
+    background: rgba(6,15,30,0.4);
+  }
+  .step-row.visible {
+    opacity:1; transform:translateX(0);
+  }
+  .step-row:hover {
+    background: rgba(0,212,255,0.04);
+  }
+  .step-row.alert-high {
+    background: rgba(255,34,68,0.05);
+    border-left:3px solid var(--red);
+  }
+  .step-row.alert-medium {
+    background: rgba(255,140,0,0.04);
+    border-left:3px solid var(--orange);
+  }
+  .step-row.alert-low {
+    border-left:3px solid transparent;
+  }
+
+  .step-num { color:var(--dim); font-size:0.65rem; }
+
+  .cls-chip {
+    font-size:0.68rem; padding:3px 8px; border-radius:2px;
+    font-weight:600; letter-spacing:1px; text-align:center;
+    display:inline-block;
+  }
+  .cls-DDoS        { background:rgba(255,34,68,0.2);  color:var(--red);    border:1px solid rgba(255,34,68,0.5); }
+  .cls-DoS         { background:rgba(255,140,0,0.2);  color:var(--orange); border:1px solid rgba(255,140,0,0.5); }
+  .cls-Reconnaissance { background:rgba(0,120,255,0.2); color:#5aafff;    border:1px solid rgba(0,120,255,0.5); }
+  .cls-Normal      { background:rgba(0,255,136,0.12); color:var(--green);  border:1px solid rgba(0,255,136,0.4); }
+
+  .arrow { color:var(--dim); text-align:center; font-size:0.9rem; }
+
+  .match-ok   { color:var(--green);  font-size:0.85rem; }
+  .match-miss { color:var(--red);    font-size:0.85rem; }
+  .match-fc   { color:#9b59b6; font-size:0.8rem; }
+
+  /* Risk bar */
+  .risk-cell { display:flex; align-items:center; gap:6px; }
+  .risk-bar-wrap {
+    flex:1; height:6px; background:rgba(255,255,255,0.07);
+    border-radius:3px; overflow:hidden;
+  }
+  .risk-bar {
+    height:100%; border-radius:3px;
+    transition: width 0.6s ease;
+  }
+  .risk-val { font-size:0.68rem; color:var(--bright); min-width:30px; text-align:right; }
+
+  /* Alert badge */
+  .alert-badge {
+    font-size:0.6rem; padding:2px 7px; border-radius:2px;
+    font-weight:700; letter-spacing:2px; text-align:center;
+  }
+  .badge-HIGH   { background:rgba(255,34,68,0.25);  color:var(--red);    border:1px solid var(--red); }
+  .badge-MEDIUM { background:rgba(255,140,0,0.2);   color:var(--orange); border:1px solid var(--orange); }
+  .badge-LOW    { background:rgba(0,255,136,0.1);   color:var(--green);  border:1px solid rgba(0,255,136,0.4); }
+
+  /* Uncertainty */
+  .unc-cell { font-size:0.68rem; color:var(--dim); }
+  .unc-high { color:var(--red); }
+
+  /* Actions column */
+  .actions-cell { font-size:0.62rem; color:var(--dim); line-height:1.5; }
+
+  /* Feed header */
+  .feed-header {
+    display:grid;
+    grid-template-columns: 42px 130px 30px 130px 90px 90px 80px 1fr;
+    gap:8px;
+    padding:8px 20px;
+    font-size:0.6rem; letter-spacing:2px;
+    color:var(--dim); text-transform:uppercase;
+    border-bottom: 1px solid var(--border);
+    background: rgba(6,15,30,0.9);
+    position:sticky; top:0; z-index:5;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    border-left:1px solid var(--border);
+    display:flex; flex-direction:column;
+    background: rgba(6,15,30,0.8);
+    overflow:hidden;
+  }
+
+  .metric-block {
+    padding:16px;
+    border-bottom:1px solid var(--border);
+  }
+  .metric-block .panel-title { margin-bottom:12px; }
+
+  .big-metric {
+    font-family:'Orbitron',sans-serif;
+    font-size:2.4rem; font-weight:900;
+    line-height:1; margin-bottom:4px;
+  }
+  .big-metric.green { color:var(--green); text-shadow:0 0 20px rgba(0,255,136,0.5); }
+  .big-metric.orange{ color:var(--orange);text-shadow:0 0 20px rgba(255,140,0,0.4); }
+  .big-metric.red   { color:var(--red);   text-shadow:0 0 20px rgba(255,34,68,0.5); }
+  .metric-sub { font-size:0.65rem; color:var(--dim); letter-spacing:1px; }
+
+  .mini-metrics {
+    display:grid; grid-template-columns:1fr 1fr; gap:8px;
+    margin-top:10px;
+  }
+  .mini-m {
+    background: rgba(0,0,0,0.3);
+    border:1px solid var(--border);
+    padding:8px; border-radius:2px;
+    text-align:center;
+  }
+  .mini-m .val {
+    font-family:'Orbitron',sans-serif;
+    font-size:1.1rem; font-weight:700; color:var(--accent);
+  }
+  .mini-m .lbl { font-size:0.58rem; color:var(--dim); letter-spacing:1px; margin-top:2px; }
+
+  /* Context dimensions */
+  .ctx-dims { padding:16px; border-bottom:1px solid var(--border); }
+  .ctx-row {
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:8px; font-size:0.68rem;
+  }
+  .ctx-row .ctx-name { color:var(--dim); min-width:80px; font-size:0.62rem; }
+  .ctx-bar-wrap {
+    flex:1; height:5px; background:rgba(255,255,255,0.06);
+    border-radius:3px; overflow:hidden;
+  }
+  .ctx-bar { height:100%; border-radius:3px; transition:width 0.5s ease; }
+  .ctx-val { font-size:0.63rem; color:var(--text); min-width:28px; text-align:right; }
+
+  /* Markov forecast */
+  .markov-block { padding:16px; flex:1; overflow-y:auto; }
+  .forecast-row {
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:7px; font-size:0.68rem;
+  }
+  .forecast-row .fcls { min-width:100px; }
+  .forecast-prob {
+    flex:1; height:5px; background:rgba(255,255,255,0.05);
+    border-radius:3px; overflow:hidden;
+  }
+  .forecast-prob-fill { height:100%; border-radius:3px; transition:width 0.5s ease; }
+  .forecast-pval { font-size:0.63rem; min-width:34px; text-align:right; color:var(--text); }
+  .forecast-step { font-size:0.6rem; color:var(--dim); margin:8px 0 4px; letter-spacing:1px; }
+
+  /* ── BOTTOM BAR ── */
+  .bottom-bar {
+    grid-column:1/-1;
+    border-top:1px solid var(--border);
+    padding:10px 20px;
+    display:flex; align-items:center; gap:16px;
+    background: rgba(6,15,30,0.95);
+  }
+  .ctrl-btn {
+    font-family:'Orbitron',sans-serif;
+    font-size:0.65rem; font-weight:700; letter-spacing:2px;
+    padding:8px 18px; border-radius:2px; cursor:pointer;
+    border:1px solid; transition:all 0.2s;
+  }
+  .btn-run {
+    background:rgba(0,212,255,0.15); color:var(--accent);
+    border-color:var(--accent);
+  }
+  .btn-run:hover { background:rgba(0,212,255,0.3); box-shadow:0 0 16px rgba(0,212,255,0.3); }
+  .btn-run:disabled { opacity:0.3; cursor:not-allowed; }
+  .btn-reset {
+    background:transparent; color:var(--dim);
+    border-color:var(--border);
+  }
+  .btn-reset:hover { color:var(--text); border-color:var(--text); }
+
+  .speed-ctrl {
+    display:flex; align-items:center; gap:8px;
+    font-size:0.65rem; color:var(--dim);
+  }
+  .speed-ctrl input[type=range] {
+    accent-color:var(--accent); width:80px;
+  }
+
+  .progress-wrap {
+    flex:1; height:4px; background:rgba(255,255,255,0.06);
+    border-radius:2px; overflow:hidden;
+  }
+  .progress-fill {
+    height:100%; background:var(--accent);
+    border-radius:2px; transition:width 0.3s ease;
+    box-shadow:0 0 8px rgba(0,212,255,0.5);
+  }
+
+  .terminal-msg {
+    font-size:0.68rem; color:var(--dim); flex:1; text-align:right;
+  }
+  .terminal-msg .blink { animation:blink 1s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── COMPARISON MODE ── */
+  .comparison-overlay {
+    display:none; position:fixed; inset:0; z-index:100;
+    background:rgba(3,8,16,0.97);
+    padding:30px;
+    overflow-y:auto;
+  }
+  .comparison-overlay.active { display:block; }
+  .cmp-grid {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:20px; margin-top:20px;
+  }
+  .cmp-panel {
+    border:1px solid var(--border);
+    border-radius:4px; overflow:hidden;
+  }
+  .cmp-header {
+    padding:12px 16px;
+    font-family:'Orbitron',sans-serif;
+    font-size:0.7rem; letter-spacing:2px;
+    font-weight:700;
+  }
+  .cmp-header.with-ctx   { background:rgba(0,212,255,0.12); color:var(--accent); }
+  .cmp-header.no-ctx { background:rgba(100,100,100,0.1); color:var(--dim); }
+  .cmp-body { padding:16px; }
+  .cmp-row {
+    display:flex; align-items:center; gap:12px;
+    padding:6px 0; border-bottom:1px solid rgba(10,32,64,0.5);
+    font-size:0.72rem;
+  }
+  .close-btn {
+    position:fixed; top:20px; right:30px;
+    font-family:'Orbitron',sans-serif; font-size:0.7rem;
+    padding:8px 16px; background:none;
+    border:1px solid var(--dim); color:var(--dim);
+    cursor:pointer; border-radius:2px;
+  }
+  .close-btn:hover { border-color:var(--text); color:var(--text); }
+
+  /* Accuracy summary */
+  .acc-summary {
+    display:flex; align-items:center; gap:8px;
+    font-size:0.65rem; color:var(--dim);
+    margin-left:auto;
+  }
+  .acc-val {
+    font-family:'Orbitron',sans-serif;
+    font-size:0.85rem; font-weight:700; color:var(--accent);
+  }
+
+  /* flicker on load */
+  .flicker { animation: flicker 0.4s ease forwards; }
+  @keyframes flicker {
+    0%{opacity:0} 20%{opacity:1} 30%{opacity:0.3} 50%{opacity:1} 70%{opacity:0.6} 100%{opacity:1}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CYBER<span>THREAT</span>FORECASTER &nbsp;|&nbsp; FYP DEMO</div>
+  <div class="status-bar">
+    <span><span class="dot green" id="xgb-dot"></span>XGBoost READY</span>
+    <span><span class="dot green" id="lstm-dot"></span>LSTM + MC DROPOUT</span>
+    <span><span class="dot green" id="ctx-dot"></span>CONTEXT ENGINE</span>
+    <span id="alert-status"><span class="dot green"></span>SYSTEM NOMINAL</span>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- LEFT: Scenarios -->
+  <div class="scenarios">
+    <div class="panel-title">// SELECT SCENARIO</div>
+    <button class="scenario-btn active" data-scenario="0" onclick="selectScenario(0,this)">
+      <span class="s-name">A · ALL NORMAL</span>
+      <span class="s-desc">Baseline normal traffic. Low-risk US workstation. Daytime.</span>
+      <div class="s-tags"><span class="tag tag-us">US</span><span class="tag tag-normal">BASELINE</span></div>
+    </button>
+    <button class="scenario-btn" data-scenario="1" onclick="selectScenario(1,this)">
+      <span class="s-name">B · SLOW ESCALATION</span>
+      <span class="s-desc">Classic kill-chain. Normal → Recon → DoS → DDoS. CN camera at night.</span>
+      <div class="s-tags"><span class="tag tag-cn">CN</span><span class="tag tag-night">NIGHT</span></div>
+    </button>
+    <button class="scenario-btn" data-scenario="2" onclick="selectScenario(2,this)">
+      <span class="s-name">C · SUDDEN DDoS</span>
+      <span class="s-desc">No warning. DDoS bursts from RU server at 3 AM without recon phase.</span>
+      <div class="s-tags"><span class="tag tag-ru">RU</span><span class="tag tag-night">3 AM</span></div>
+    </button>
+    <button class="scenario-btn" data-scenario="3" onclick="selectScenario(3,this)">
+      <span class="s-name">D · STEALTH RECON</span>
+      <span class="s-desc">Attacker alternates Normal/Recon to evade detection. UA sensor.</span>
+      <div class="s-tags"><span class="tag tag-ua">UA</span><span class="tag tag-apt">STEALTH</span></div>
+    </button>
+    <button class="scenario-btn" data-scenario="4" onclick="selectScenario(4,this)">
+      <span class="s-name">E · APT SIMULATION</span>
+      <span class="s-desc">Slow recon with deceptive Normal gaps. Burst attack. KP server, 1 AM.</span>
+      <div class="s-tags"><span class="tag tag-kp">KP</span><span class="tag tag-apt">APT</span><span class="tag tag-night">1 AM</span></div>
+    </button>
+
+    <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:16px;">
+      <div class="panel-title">// PIPELINE</div>
+      <div style="font-size:0.65rem; line-height:2; color:var(--dim);">
+        <span style="color:var(--accent)">XGBoost</span> &nbsp; 5% weight<br>
+        Current-state classifier<br><br>
+        <span style="color:var(--accent)">LSTM + MC Dropout</span> &nbsp; 15%<br>
+        Temporal patterns (30 passes)<br><br>
+        <span style="color:var(--accent)">Adaptive Markov</span> &nbsp; 80%<br>
+        Raw + Transition-Only + Escalation Prior<br><br>
+        <span style="color:var(--accent)">Context Engine</span> &nbsp; 5D score<br>
+        time · device · network · history · geo
+      </div>
+    </div>
+
+    <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
+      <div class="panel-title">// DEMO TOOLS</div>
+      <button class="ctrl-btn btn-run" style="width:100%; margin-bottom:8px;" onclick="showComparison()">
+        ◈ CONTEXT COMPARISON
+      </button>
+      <div style="font-size:0.62rem; color:var(--dim); line-height:1.6;">
+        Show same attack with context ON vs context OFF — proves why context engine matters
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Main Feed -->
+  <div class="main-feed">
+    <div class="seq-bar">
+      <div class="seq-label">// TRAFFIC SEQUENCE</div>
+      <div class="seq-steps" id="seq-steps"></div>
+    </div>
+
+    <div class="feed">
+      <div class="feed-header">
+        <span>STEP</span>
+        <span>CURRENT</span>
+        <span></span>
+        <span>FORECAST</span>
+        <span>RISK SCORE</span>
+        <span>ALERT</span>
+        <span>MC UNC</span>
+        <span>ACTIONS</span>
+      </div>
+      <div id="feed-rows"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Metrics -->
+  <div class="right-panel">
+    <div class="metric-block">
+      <div class="panel-title">// FORECAST ACCURACY</div>
+      <div class="big-metric green" id="acc-val">—</div>
+      <div class="metric-sub" id="acc-sub">AWAITING RUN</div>
+      <div class="mini-metrics">
+        <div class="mini-m"><div class="val" id="high-count">0</div><div class="lbl">HIGH ALERTS</div></div>
+        <div class="mini-m"><div class="val" id="med-count">0</div><div class="lbl">MEDIUM</div></div>
+        <div class="mini-m"><div class="val" id="avg-risk" style="color:var(--orange)">—</div><div class="lbl">AVG RISK</div></div>
+        <div class="mini-m"><div class="val" id="avg-unc" style="color:#9b59b6">—</div><div class="lbl">AVG UNC</div></div>
+      </div>
+    </div>
+
+    <div class="ctx-dims" id="ctx-panel">
+      <div class="panel-title">// CONTEXT SCORE</div>
+      <div id="ctx-rows"></div>
+    </div>
+
+    <div class="markov-block">
+      <div class="panel-title">// MARKOV LOOKAHEAD</div>
+      <div style="font-size:0.6rem; color:var(--dim); margin-bottom:10px;" id="lookahead-from">from last forecast</div>
+      <div id="lookahead-rows"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-bar">
+    <button class="ctrl-btn btn-run" id="run-btn" onclick="runDemo()">▶ RUN SCENARIO</button>
+    <button class="ctrl-btn btn-reset" onclick="resetDemo()">↺ RESET</button>
+    <div class="speed-ctrl">
+      <span>SPEED</span>
+      <input type="range" id="speed" min="1" max="5" value="3">
+      <span id="speed-label">NORMAL</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-fill" id="progress" style="width:0%"></div>
+    </div>
+    <div class="acc-summary">
+      <span>ACCURACY</span>
+      <span class="acc-val" id="bottom-acc">—</span>
+    </div>
+    <div class="terminal-msg" id="term-msg">
+      SELECT A SCENARIO AND PRESS RUN <span class="blink">_</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- COMPARISON OVERLAY -->
+<div class="comparison-overlay" id="cmp-overlay">
+  <button class="close-btn" onclick="hideComparison()">✕ CLOSE</button>
+  <div style="font-family:'Orbitron',sans-serif; font-size:1rem; font-weight:700; color:var(--accent); letter-spacing:3px;">
+    CONTEXT ENGINE — IMPACT DEMONSTRATION
+  </div>
+  <div style="font-size:0.72rem; color:var(--dim); margin-top:6px;">
+    Same attack sequence B_SLOW_ESCALATION · Same models · Context ON vs Context OFF
+  </div>
+  <div class="cmp-grid" id="cmp-grid"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  DATA — Simulated results (deterministic for demo)
+// ══════════════════════════════════════════════════════
+
+const SCENARIOS_DATA = [
+  {
+    name: 'A_ALLNORMAL',
+    ctx: { hour:10, device:'workstation', pkts:100, dsts:5, repeat:0, geo:'US' },
+    steps: [
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.212, alert:'LOW', unc:0.0, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.214, alert:'LOW', unc:0.0, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.211, alert:'LOW', unc:0.0, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.213, alert:'LOW', unc:0.0, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.213, alert:'LOW', unc:0.0, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.213, alert:'LOW', unc:0.0, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.212, alert:'LOW', unc:0.0, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.211, alert:'LOW', unc:0.18, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'Normal', risk:0.213, alert:'LOW', unc:0.21, tl:0.22, match:true },
+      { cur:'Normal', pred:'Normal', true_next:'(FORECAST)', risk:0.212, alert:'LOW', unc:0.20, tl:0.22, match:null },
+    ],
+    ctx_vals: { time:0.20, device:0.30, network:0.14, threat_history:0.10, geolocation:0.15 },
+    lookahead: [
+      { step:'t+1', Normal:0.72, Reconnaissance:0.18, DoS:0.06, DDoS:0.04 },
+      { step:'t+2', Normal:0.61, Reconnaissance:0.22, DoS:0.10, DDoS:0.07 },
+      { step:'t+3', Normal:0.55, Reconnaissance:0.24, DoS:0.13, DDoS:0.08 },
+    ]
+  },
+  {
+    name: 'B_SLOW_ESCALATION',
+    ctx: { hour:22, device:'camera', pkts:500, dsts:30, repeat:2, geo:'CN' },
+    steps: [
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Normal',        risk:0.581, alert:'MEDIUM', unc:0.00, tl:0.68, match:false },
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Normal',        risk:0.583, alert:'MEDIUM', unc:0.00, tl:0.68, match:false },
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Reconnaissance',risk:0.582, alert:'MEDIUM', unc:0.00, tl:0.68, match:true },
+      { cur:'Reconnaissance',pred:'DoS',            true_next:'Reconnaissance',risk:0.694, alert:'MEDIUM', unc:0.12, tl:0.75, match:false },
+      { cur:'Reconnaissance',pred:'DoS',            true_next:'DoS',           risk:0.701, alert:'HIGH',   unc:0.18, tl:0.77, match:true },
+      { cur:'DoS',           pred:'DDoS',           true_next:'DoS',           risk:0.748, alert:'HIGH',   unc:0.22, tl:0.80, match:false },
+      { cur:'DoS',           pred:'DDoS',           true_next:'DDoS',          risk:0.751, alert:'HIGH',   unc:0.24, tl:0.81, match:true },
+      { cur:'DDoS',          pred:'DDoS',           true_next:'DDoS',          risk:0.821, alert:'HIGH',   unc:0.28, tl:0.85, match:true },
+      { cur:'DDoS',          pred:'DDoS',           true_next:'DDoS',          risk:0.825, alert:'HIGH',   unc:0.29, tl:0.86, match:true },
+      { cur:'DDoS',          pred:'DDoS',           true_next:'(FORECAST)',    risk:0.827, alert:'HIGH',   unc:0.30, tl:0.87, match:null },
+    ],
+    ctx_vals: { time:0.60, device:0.80, network:0.54, threat_history:0.75, geolocation:0.90 },
+    lookahead: [
+      { step:'t+1', Normal:0.10, Reconnaissance:0.05, DoS:0.20, DDoS:0.65 },
+      { step:'t+2', Normal:0.12, Reconnaissance:0.06, DoS:0.18, DDoS:0.64 },
+      { step:'t+3', Normal:0.14, Reconnaissance:0.07, DoS:0.17, DDoS:0.62 },
+    ]
+  },
+  {
+    name: 'C_SUDDEN_DDoS',
+    ctx: { hour:3, device:'server', pkts:950, dsts:45, repeat:3, geo:'RU' },
+    steps: [
+      { cur:'Normal', pred:'Reconnaissance', true_next:'Normal', risk:0.612, alert:'MEDIUM', unc:0.00, tl:0.72, match:false },
+      { cur:'Normal', pred:'Reconnaissance', true_next:'DDoS',   risk:0.614, alert:'MEDIUM', unc:0.00, tl:0.72, match:false },
+      { cur:'DDoS',   pred:'DDoS',           true_next:'DDoS',   risk:0.841, alert:'HIGH',   unc:0.31, tl:0.88, match:true },
+      { cur:'DDoS',   pred:'DDoS',           true_next:'DDoS',   risk:0.844, alert:'HIGH',   unc:0.33, tl:0.88, match:true },
+      { cur:'DDoS',   pred:'DDoS',           true_next:'DDoS',   risk:0.843, alert:'HIGH',   unc:0.34, tl:0.89, match:true },
+      { cur:'DDoS',   pred:'DDoS',           true_next:'DDoS',   risk:0.845, alert:'HIGH',   unc:0.32, tl:0.89, match:true },
+      { cur:'DDoS',   pred:'DDoS',           true_next:'DDoS',   risk:0.842, alert:'HIGH',   unc:0.33, tl:0.89, match:true },
+      { cur:'DDoS',   pred:'DDoS',           true_next:'DDoS',   risk:0.846, alert:'HIGH',   unc:0.31, tl:0.89, match:true },
+      { cur:'DDoS',   pred:'DDoS',           true_next:'Normal', risk:0.843, alert:'HIGH',   unc:0.32, tl:0.89, match:false },
+      { cur:'Normal', pred:'DDoS',           true_next:'(FORECAST)', risk:0.651, alert:'MEDIUM', unc:0.28, tl:0.74, match:null },
+    ],
+    ctx_vals: { time:0.90, device:0.20, network:0.93, threat_history:0.75, geolocation:0.90 },
+    lookahead: [
+      { step:'t+1', Normal:0.08, Reconnaissance:0.04, DoS:0.18, DDoS:0.70 },
+      { step:'t+2', Normal:0.09, Reconnaissance:0.05, DoS:0.17, DDoS:0.69 },
+      { step:'t+3', Normal:0.11, Reconnaissance:0.06, DoS:0.16, DDoS:0.67 },
+    ]
+  },
+  {
+    name: 'D_STEALTH_RECON',
+    ctx: { hour:14, device:'sensor', pkts:200, dsts:15, repeat:1, geo:'UA' },
+    steps: [
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Reconnaissance', risk:0.521, alert:'MEDIUM', unc:0.00, tl:0.58, match:true  },
+      { cur:'Reconnaissance',pred:'Reconnaissance', true_next:'Normal',         risk:0.588, alert:'MEDIUM', unc:0.14, tl:0.62, match:false },
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Reconnaissance', risk:0.522, alert:'MEDIUM', unc:0.12, tl:0.63, match:true  },
+      { cur:'Reconnaissance',pred:'DoS',            true_next:'Normal',         risk:0.612, alert:'MEDIUM', unc:0.19, tl:0.66, match:false },
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Reconnaissance', risk:0.524, alert:'MEDIUM', unc:0.21, tl:0.68, match:true  },
+      { cur:'Reconnaissance',pred:'DoS',            true_next:'Normal',         risk:0.618, alert:'MEDIUM', unc:0.24, tl:0.70, match:false },
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Normal',         risk:0.521, alert:'MEDIUM', unc:0.22, tl:0.68, match:false },
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Normal',         risk:0.519, alert:'MEDIUM', unc:0.20, tl:0.66, match:false },
+      { cur:'Normal',        pred:'Normal',         true_next:'Normal',         risk:0.481, alert:'MEDIUM', unc:0.19, tl:0.62, match:true  },
+      { cur:'Normal',        pred:'Normal',         true_next:'(FORECAST)',     risk:0.478, alert:'MEDIUM', unc:0.18, tl:0.60, match:null  },
+    ],
+    ctx_vals: { time:0.20, device:0.70, network:0.26, threat_history:0.50, geolocation:0.55 },
+    lookahead: [
+      { step:'t+1', Normal:0.28, Reconnaissance:0.42, DoS:0.18, DDoS:0.12 },
+      { step:'t+2', Normal:0.22, Reconnaissance:0.35, DoS:0.26, DDoS:0.17 },
+      { step:'t+3', Normal:0.19, Reconnaissance:0.28, DoS:0.30, DDoS:0.23 },
+    ]
+  },
+  {
+    name: 'E_APT_SIMULATION',
+    ctx: { hour:1, device:'server', pkts:700, dsts:38, repeat:3, geo:'KP' },
+    steps: [
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Normal',        risk:0.622, alert:'MEDIUM', unc:0.00, tl:0.73, match:false },
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Reconnaissance',risk:0.624, alert:'MEDIUM', unc:0.00, tl:0.73, match:true  },
+      { cur:'Reconnaissance',pred:'DoS',            true_next:'Normal',        risk:0.698, alert:'MEDIUM', unc:0.15, tl:0.78, match:false },
+      { cur:'Normal',        pred:'Reconnaissance', true_next:'Reconnaissance',risk:0.628, alert:'MEDIUM', unc:0.17, tl:0.74, match:true  },
+      { cur:'Reconnaissance',pred:'DoS',            true_next:'Reconnaissance',risk:0.701, alert:'HIGH',   unc:0.22, tl:0.79, match:false },
+      { cur:'Reconnaissance',pred:'DoS',            true_next:'DoS',           risk:0.706, alert:'HIGH',   unc:0.24, tl:0.80, match:true  },
+      { cur:'DoS',           pred:'DDoS',           true_next:'Normal',        risk:0.752, alert:'HIGH',   unc:0.27, tl:0.83, match:false },
+      { cur:'Normal',        pred:'DoS',            true_next:'DoS',           risk:0.641, alert:'MEDIUM', unc:0.29, tl:0.75, match:false },
+      { cur:'DoS',           pred:'DDoS',           true_next:'DDoS',          risk:0.758, alert:'HIGH',   unc:0.30, tl:0.84, match:true  },
+      { cur:'DDoS',          pred:'DDoS',           true_next:'(FORECAST)',    risk:0.831, alert:'HIGH',   unc:0.31, tl:0.88, match:null  },
+    ],
+    ctx_vals: { time:0.90, device:0.20, network:0.85, threat_history:0.75, geolocation:0.90 },
+    lookahead: [
+      { step:'t+1', Normal:0.08, Reconnaissance:0.05, DoS:0.22, DDoS:0.65 },
+      { step:'t+2', Normal:0.09, Reconnaissance:0.06, DoS:0.19, DDoS:0.66 },
+      { step:'t+3', Normal:0.11, Reconnaissance:0.06, DoS:0.17, DDoS:0.66 },
+    ]
+  },
+];
+
+const ACTIONS = {
+  DDoS:           ['🚫 BLOCK IP', '⚡ RATE LIMIT', '🛡 DDoS MITIGATION'],
+  DoS:            ['🚫 BLOCK IP', '🔒 ISOLATE DEVICE'],
+  Reconnaissance: ['📝 LOG SCAN', '👁 INCREASE MONITORING'],
+  Normal:         ['✅ CONTINUE'],
+};
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let currentScenario = 0;
+let running = false;
+let timer = null;
+
+function selectScenario(idx, btn) {
+  currentScenario = idx;
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  resetDemo();
+}
+
+function getSpeed() {
+  const v = parseInt(document.getElementById('speed').value);
+  const labels = ['SLOW','SLOW','NORMAL','FAST','INSTANT'];
+  const delays  = [1400, 900, 600, 300, 80];
+  document.getElementById('speed-label').textContent = labels[v-1];
+  return delays[v-1];
+}
+
+document.getElementById('speed').addEventListener('input', getSpeed);
+
+// ══════════════════════════════════════════════════════
+//  RENDER SEQUENCE BAR
+// ══════════════════════════════════════════════════════
+function renderSequence(steps, currentStep) {
+  const container = document.getElementById('seq-steps');
+  container.innerHTML = '';
+  steps.forEach((s, i) => {
+    const div = document.createElement('div');
+    const cls = s.cur.replace(' ','');
+    div.className = `seq-step cls-${cls} ${i < currentStep ? 'past' : i === currentStep ? 'current' : 'future'}`;
+    div.textContent = s.cur === 'Reconnaissance' ? 'Recon' : s.cur;
+    container.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER ONE STEP ROW
+// ══════════════════════════════════════════════════════
+function renderStep(step, data) {
+  const feed = document.getElementById('feed-rows');
+  const row = document.createElement('div');
+  row.className = `step-row alert-${data.alert.toLowerCase()}`;
+  row.id = `row-${step}`;
+
+  const riskColor = data.risk >= 0.70 ? '#ff2244' : data.risk >= 0.45 ? '#ff8c00' : '#00ff88';
+  const riskPct   = Math.round(data.risk * 100);
+  const matchHtml = data.match === null
+    ? `<span class="match-fc">🔮</span>`
+    : data.match
+      ? `<span class="match-ok">✓</span>`
+      : `<span class="match-miss">✗</span>`;
+
+  const uncClass = data.unc >= 0.6 ? 'unc-high' : '';
+  const actions  = ACTIONS[data.pred] || ['MONITOR'];
+
+  row.innerHTML = `
+    <span class="step-num">t${step}</span>
+    <span class="cls-chip cls-${data.cur}">${data.cur === 'Reconnaissance' ? 'Recon' : data.cur}</span>
+    <span class="arrow">→</span>
+    <span class="cls-chip cls-${data.pred}">${data.pred === 'Reconnaissance' ? 'Recon' : data.pred}</span>
+    <div class="risk-cell">
+      <div class="risk-bar-wrap"><div class="risk-bar" style="width:${riskPct}%; background:${riskColor}"></div></div>
+      <span class="risk-val">${data.risk.toFixed(3)}</span>
+    </div>
+    <span class="alert-badge badge-${data.alert}">${data.alert}</span>
+    <span class="unc-cell ${uncClass}">${data.unc.toFixed(2)}</span>
+    <span class="actions-cell">${actions.join('<br>')}</span>
+  `;
+
+  feed.appendChild(row);
+  setTimeout(() => row.classList.add('visible'), 30);
+  row.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ══════════════════════════════════════════════════════
+//  UPDATE RIGHT PANEL
+// ══════════════════════════════════════════════════════
+function updateMetrics(steps, completedIdx) {
+  const sc = SCENARIOS_DATA[currentScenario];
+  const done = steps.slice(0, completedIdx + 1);
+  const validPreds = done.filter(s => s.match !== null);
+  const correct    = validPreds.filter(s => s.match === true).length;
+  const total      = validPreds.length;
+  const acc        = total > 0 ? Math.round(correct / total * 100) : 0;
+  const highAlerts = done.filter(s => s.alert === 'HIGH').length;
+  const medAlerts  = done.filter(s => s.alert === 'MEDIUM').length;
+  const avgRisk    = done.reduce((a,s) => a + s.risk, 0) / done.length;
+  const avgUnc     = done.reduce((a,s) => a + s.unc, 0) / done.length;
+
+  const accEl  = document.getElementById('acc-val');
+  accEl.textContent = total > 0 ? acc + '%' : '—';
+  accEl.className = `big-metric ${acc >= 70 ? 'green' : acc >= 50 ? 'orange' : 'red'}`;
+
+  document.getElementById('acc-sub').textContent = `${correct}/${total} CORRECT FORECASTS`;
+  document.getElementById('high-count').textContent = highAlerts;
+  document.getElementById('med-count').textContent  = medAlerts;
+  document.getElementById('avg-risk').textContent   = avgRisk.toFixed(3);
+  document.getElementById('avg-unc').textContent    = avgUnc.toFixed(3);
+  document.getElementById('bottom-acc').textContent = total > 0 ? acc + '%' : '—';
+
+  // Context panel
+  const ctx = sc.ctx_vals;
+  const ctxLabels = { time:'TIME', device:'DEVICE', network:'NETWORK', threat_history:'HISTORY', geolocation:'GEO' };
+  const ctxColors = { time:'#3a9fff', device:'#ff2244', network:'#00ff88', threat_history:'#ff8c00', geolocation:'#cc88ff' };
+  const ctxRows = document.getElementById('ctx-rows');
+  ctxRows.innerHTML = '';
+  Object.entries(ctx).forEach(([k, v]) => {
+    const pct = Math.round(v * 100);
+    ctxRows.innerHTML += `
+      <div class="ctx-row">
+        <span class="ctx-name">${ctxLabels[k]}</span>
+        <div class="ctx-bar-wrap"><div class="ctx-bar" style="width:${pct}%;background:${ctxColors[k]}"></div></div>
+        <span class="ctx-val">${v.toFixed(2)}</span>
+      </div>`;
+  });
+
+  // Alert status header
+  if (highAlerts > 0) {
+    document.getElementById('alert-status').innerHTML =
+      `<span class="dot red"></span>⚠ HIGH ALERT ACTIVE`;
+    document.getElementById('alert-status').style.color = 'var(--red)';
+  } else if (medAlerts > 0) {
+    document.getElementById('alert-status').innerHTML =
+      `<span class="dot orange"></span>MEDIUM ALERT`;
+    document.getElementById('alert-status').style.color = 'var(--orange)';
+  }
+}
+
+function updateLookahead(stepData) {
+  const sc = SCENARIOS_DATA[currentScenario];
+  document.getElementById('lookahead-from').textContent = `from "${stepData.pred}" forecast`;
+  const rows = document.getElementById('lookahead-rows');
+  rows.innerHTML = '';
+  const clsColors = { Normal:'#00ff88', Reconnaissance:'#3a9fff', DoS:'#ff8c00', DDoS:'#ff2244' };
+  sc.lookahead.forEach(fc => {
+    rows.innerHTML += `<div class="forecast-step">${fc.step}</div>`;
+    ['DDoS','DoS','Reconnaissance','Normal'].forEach(cls => {
+      const v = fc[cls] || 0;
+      rows.innerHTML += `
+        <div class="forecast-row">
+          <span class="fcls cls-chip cls-${cls}" style="font-size:0.58rem;padding:2px 6px">${cls === 'Reconnaissance' ? 'Recon' : cls}</span>
+          <div class="forecast-prob"><div class="forecast-prob-fill" style="width:${Math.round(v*100)}%;background:${clsColors[cls]}"></div></div>
+          <span class="forecast-pval">${(v*100).toFixed(0)}%</span>
+        </div>`;
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  RUN DEMO
+// ══════════════════════════════════════════════════════
+async function runDemo() {
+  if (running) return;
+  running = true;
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('feed-rows').innerHTML = '';
+  document.getElementById('alert-status').innerHTML = `<span class="dot green"></span>SYSTEM NOMINAL`;
+  document.getElementById('alert-status').style.color = '';
+
+  const sc    = SCENARIOS_DATA[currentScenario];
+  const steps = sc.steps;
+  const delay = getSpeed();
+
+  document.getElementById('term-msg').innerHTML =
+    `RUNNING ${sc.name} <span class="blink">_</span>`;
+
+  for (let i = 0; i < steps.length; i++) {
+    renderSequence(steps, i);
+    renderStep(i, steps[i]);
+    updateMetrics(steps, i);
+    if (i === steps.length - 1) updateLookahead(steps[i]);
+
+    const pct = Math.round((i + 1) / steps.length * 100);
+    document.getElementById('progress').style.width = pct + '%';
+
+    await new Promise(r => setTimeout(r, delay));
+  }
+
+  running = false;
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('term-msg').innerHTML =
+    `COMPLETE — ${steps.filter(s=>s.match!==null && s.match).length}/${steps.filter(s=>s.match!==null).length} CORRECT <span class="blink">_</span>`;
+}
+
+function resetDemo() {
+  if (running) { running = false; clearTimeout(timer); }
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('feed-rows').innerHTML = '';
+  document.getElementById('progress').style.width = '0%';
+  document.getElementById('acc-val').textContent  = '—';
+  document.getElementById('acc-sub').textContent  = 'AWAITING RUN';
+  document.getElementById('high-count').textContent = '0';
+  document.getElementById('med-count').textContent  = '0';
+  document.getElementById('avg-risk').textContent   = '—';
+  document.getElementById('avg-unc').textContent    = '—';
+  document.getElementById('bottom-acc').textContent = '—';
+  document.getElementById('ctx-rows').innerHTML     = '';
+  document.getElementById('lookahead-rows').innerHTML = '';
+  document.getElementById('lookahead-from').textContent = 'from last forecast';
+  document.getElementById('alert-status').innerHTML = `<span class="dot green"></span>SYSTEM NOMINAL`;
+  document.getElementById('alert-status').style.color = '';
+  document.getElementById('term-msg').innerHTML =
+    `SELECT A SCENARIO AND PRESS RUN <span class="blink">_</span>`;
+
+  const sc = SCENARIOS_DATA[currentScenario];
+  renderSequence(sc.steps.map((s,i) => ({...s, _i:i})), -1);
+  document.getElementById('seq-steps').querySelectorAll('.seq-step').forEach(el => {
+    el.classList.remove('current','past');
+    el.classList.add('future');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  COMPARISON MODE — Context ON vs OFF
+// ══════════════════════════════════════════════════════
+function showComparison() {
+  const sc = SCENARIOS_DATA[1]; // B_SlowEscalation
+  const grid = document.getElementById('cmp-grid');
+
+  // Context ON = scenario B as-is
+  // Context OFF = same sequence but all alerts would be based only on model confidence
+  // (simulated: risk = 0.65 * conf, no context boost)
+  const ctxOn  = sc.steps;
+  const ctxOff = sc.steps.map(s => ({
+    ...s,
+    risk: parseFloat((s.risk * 0.65).toFixed(3)),
+    alert: s.risk * 0.65 >= 0.70 ? 'HIGH' : s.risk * 0.65 >= 0.45 ? 'MEDIUM' : 'LOW',
+  }));
+
+  const clsChip = (c) => `<span class="cls-chip cls-${c}" style="font-size:0.6rem;padding:2px 6px">${c === 'Reconnaissance' ? 'Recon' : c}</span>`;
+  const badge   = (a) => `<span class="alert-badge badge-${a}">${a}</span>`;
+  const riskCol = (r) => r >= 0.70 ? 'var(--red)' : r >= 0.45 ? 'var(--orange)' : 'var(--green)';
+
+  const buildPanel = (title, steps, headerCls) => `
+    <div class="cmp-panel">
+      <div class="cmp-header ${headerCls}">${title}</div>
+      <div class="cmp-body">
+        ${steps.map((s,i) => `
+          <div class="cmp-row">
+            <span style="color:var(--dim);font-size:0.65rem;min-width:24px">t${i}</span>
+            ${clsChip(s.cur)}
+            <span style="color:var(--dim)">→</span>
+            ${clsChip(s.pred)}
+            <span style="color:${riskCol(s.risk)};min-width:42px;font-size:0.7rem">${s.risk.toFixed(3)}</span>
+            ${badge(s.alert)}
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  const highOn  = ctxOn.filter(s => s.alert === 'HIGH').length;
+  const highOff = ctxOff.filter(s => s.alert === 'HIGH').length;
+
+  grid.innerHTML = `
+    ${buildPanel(`✦ WITH CONTEXT ENGINE &nbsp;→&nbsp; ${highOn} HIGH alerts`, ctxOn,  'with-ctx')}
+    ${buildPanel(`✦ WITHOUT CONTEXT &nbsp;→&nbsp; ${highOff} HIGH alerts`,   ctxOff, 'no-ctx')}
+    <div style="grid-column:1/-1;padding:16px;border:1px solid var(--border);border-radius:4px;
+         background:rgba(0,212,255,0.04); margin-top:4px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.65rem;color:var(--accent);letter-spacing:2px;margin-bottom:10px;">
+        WHAT THE CONTEXT ENGINE ADDS
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:0.68rem;">
+        <div>
+          <div style="color:var(--dim);font-size:0.6rem;letter-spacing:1px;margin-bottom:6px">TIME OF DAY</div>
+          Night (22h) → score 0.60 vs 0.20 day<br>
+          <span style="color:var(--orange)">3× higher suspicion at night</span>
+        </div>
+        <div>
+          <div style="color:var(--dim);font-size:0.6rem;letter-spacing:1px;margin-bottom:6px">GEOLOCATION</div>
+          CN/RU/KP → 0.90 vs US → 0.15<br>
+          <span style="color:var(--red)">6× multiplier for high-risk origins</span>
+        </div>
+        <div>
+          <div style="color:var(--dim);font-size:0.6rem;letter-spacing:1px;margin-bottom:6px">RESULT</div>
+          ${highOff} HIGH alerts without context<br>
+          <span style="color:var(--green)">${highOn} HIGH alerts with context → earlier action</span>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('cmp-overlay').classList.add('active');
+}
+
+function hideComparison() {
+  document.getElementById('cmp-overlay').classList.remove('active');
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+resetDemo();
+</script>
+</body>
+</html>

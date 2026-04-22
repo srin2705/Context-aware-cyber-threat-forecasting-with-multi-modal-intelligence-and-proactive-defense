@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Data files (too large for GitHub)
+*.csv
+*.npy
+reduced_data_*.csv
+
+# Model weights (large — use Git LFS or releases)
+fyp_saved_models/X_bal.npy
+fyp_saved_models/y_bal.npy
+fyp_saved_models/xgb_model.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
