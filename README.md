@@ -2,7 +2,7 @@
 
 > **Predict the next attack before it happens** — a production-ready ML pipeline that classifies live IoT network traffic *and* forecasts future threat states using a hybrid XGBoost → LSTM → Adaptive Markov v3 architecture with uncertainty quantification and context-aware risk scoring.
 
-[![Dataset](https://img.shields.io/badge/Dataset-Bot--IoT-purple)]([https://research.unsw.edu.au/projects/bot-iot-dataset](https://www.kaggle.com/datasets/vigneshvenkateswaran/bot-iot-5-data))
+[![Dataset](https://img.shields.io/badge/Dataset-Bot--IoT-purple)]((https://www.kaggle.com/datasets/vigneshvenkateswaran/bot-iot-5-data))
 
 ---
 
